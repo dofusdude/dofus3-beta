@@ -34,7 +34,7 @@ jobs:
           chmod +x doduda
           ./doduda --version
       - name: Download
-        run: ./doduda --headless --release beta --dofus-version ${{ github.event.inputs.version }} --output ./data
+        run: ./doduda --headless --jobs 1 --release beta --dofus-version ${{ github.event.inputs.version }} --output ./data
       - name: Map
         run: ./doduda map --headless --release beta --output ./data
       - name: Package
@@ -124,7 +124,7 @@ jobs:
           mv monster_images_128.tar.gz out/
 
           tar -czf smiley_images_32.tar.gz $(find data/img/smiley/1x -name "*.png")
-          mv smiley_images_64.tar.gz out/
+          mv smiley_images_32.tar.gz out/
           tar -czf smiley_images_64.tar.gz $(find data/img/smiley/2x -name "*.png")
           mv smiley_images_64.tar.gz out/
 
