@@ -29,7 +29,19 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release download -R dofusdude/doduda -p "doduda_Linux_x86_64.tar.gz"
+          releases=$(gh api --paginate --slurp 'repos/dofusdude/doduda/releases?per_page=100')
+          beta_tag=$(jq -r '[.[][] | select(
+            .draft == false and .prerelease == true and
+            (.tag_name | test("-beta([.-]|$)")) and
+            any(.assets[]; .name == "doduda_Linux_x86_64.tar.gz")
+          )] | sort_by(.published_at) | reverse | .[0].tag_name // empty' <<< "$releases")
+          if [ -n "$beta_tag" ]; then
+            echo "Using doduda beta: $beta_tag"
+            gh release download "$beta_tag" -R dofusdude/doduda -p "doduda_Linux_x86_64.tar.gz"
+          else
+            echo "No doduda beta available; using latest stable release"
+            gh release download -R dofusdude/doduda -p "doduda_Linux_x86_64.tar.gz"
+          fi
           tar -xzf "doduda_Linux_x86_64.tar.gz"
           chmod +x doduda
           ./doduda --version
