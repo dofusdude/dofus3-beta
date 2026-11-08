@@ -8,6 +8,9 @@ on:
         description: The version that will be downloaded
         required: true
 
+permissions:
+  contents: write
+
 jobs:
   tag:
     runs-on: ubuntu-latest
@@ -15,10 +18,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Tag snapshot
-        uses: tvdias/github-tagger@v0.0.1
-        with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          tag: "${{ github.event.inputs.version }}"
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GAME_VERSION: ${{ inputs.version }}
+        run: |
+          if gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$GAME_VERSION" >/dev/null 2>&1; then
+            echo "Using existing game tag: $GAME_VERSION"
+          else
+            gh api --method POST "repos/$GITHUB_REPOSITORY/git/refs" \
+              -f "ref=refs/tags/$GAME_VERSION" -f "sha=$GITHUB_SHA"
+          fi
   release:
     needs: tag
     runs-on: ubuntu-latest
